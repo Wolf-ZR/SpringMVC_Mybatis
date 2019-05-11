@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ssm.mapper.ItemsCustomMapper" >
+    <sql id="items_name">
+        <where>
+            items.`name`=#{name} or items.`detail` LIKE "%${detail}%"
+        </where>
+    </sql>
+    <sql id="findItems_where">
+        <where>
+        <if test="itemsCustom!=null">
+            <if test="itemsCustom.name!=null and itemsCustom.name!=''">
+                items.`name` LIKE "%${itemsCustom.name}%"
+            </if>
+        </if>
+        </where>
+    </sql>
+    <resultMap id="ItemsofUserMap" type="ItemsQueryVo">
+        <association property="itemsCustom" javaType="itemsCustom">
+            <result column="name" property="name"/>
+            <result column="price" property="price"/>
+            <result column="detail" property="detail"/>
+            <result column="pic" property="pic"/>
+            <result column="createtime" property="createtime"/>
+            <collection property="users" ofType="User">
+                <id column="id" property="id"/>
+                <result column="username" property="username"/>
+                <result column="birthday" property="birthday"/>
+                <result column="sex" property="sex"/>
+                <result column="address" property="address"/>
+            </collection>
+        </association>
+    </resultMap>
+    <select id="findItemsofUser" parameterType="Items" resultMap="ItemsofUserMap">
+        SELECT
+        user.*,
+        items.`name`,
+        items.price,
+        items.detail,
+        items.pic,
+        items.createtime
+        FROM
+        items
+        INNER JOIN orderdetail ON orderdetail.items_id = items.id
+        INNER JOIN orders ON orderdetail.orders_id = orders.id
+        INNER JOIN `user` ON orders.user_id = `user`.id
+        <include refid="items_name"/>
+    </select>
+    <!--查询商品列表-->
+    <select id="findItems" parameterType="com.ssm.po.ItemsQueryVo" resultType="ItemsCustom">
+        SELECT items.*
+        FROM items
+        <include refid="findItems_where"/>
+
+    </select>
+</mapper>

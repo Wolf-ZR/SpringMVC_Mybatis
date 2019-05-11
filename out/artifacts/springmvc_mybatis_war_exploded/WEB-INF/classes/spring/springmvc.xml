@@ -1,0 +1,98 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/mvc
+		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-3.2.xsd ">
+
+    <!--使用mvc:annotation-driver代替上边注解映射器和注解适配器配置
+    mvc:annotation-driver默认加载了很多的参数绑定方法，比如：json转换解析器就默认加载了
+    实际开发使用mvc:annotation-driver-->
+    <mvc:annotation-driven conversion-service="conversionService"
+                           validator="validator"></mvc:annotation-driven>
+    <!--对于注解的handler可以单个配置
+    实际开发中建议使用扫描-->
+    <!--<bean class="com.zhang.ssm.controller.ItemsCotroller3"/>-->
+    <!--可以扫描controller、service、...这里扫描controller包-->
+    <context:component-scan base-package="com.ssm.controller"/>
+    <!--静态资源解析-->
+    <mvc:resources mapping="/js/**" location="/js/"/>
+    <!--<mvc:resources mapping="/img/**" location="/img/"/>-->
+    <!--自定义参数绑定-->
+    <bean id="conversionService" class=
+            "org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <!--转换器-->
+        <property name="converters">
+            <list>
+               <bean class="com.ssm.controller.converter.CustomConverter"/>
+            </list>
+        </property>
+    </bean>
+    <!-- 校验器 -->
+    <bean id="validator"
+          class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <!-- hibernate校验器-->
+        <property name="providerClass" value="org.hibernate.validator.HibernateValidator" />
+        <!-- 指定校验使用的资源文件，在文件中配置校验错误信息，如果不指定则默认使用classpath下的ValidationMessages.properties -->
+        <property name="validationMessageSource" ref="messageSource" />
+    </bean>
+    <!-- 校验错误信息配置文件 -->
+    <bean id="messageSource"
+          class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <!-- 资源文件名-->
+        <property name="basenames">
+            <list>
+                <!--在IDEA里显示红色不影响使用-->
+                <value>classpath:CustomValidationMessages</value>
+            </list>
+        </property>
+        <!--解决中文乱码-->
+        <property name="defaultEncoding" value="UTF-8"/>
+        <!-- 资源文件编码格式 -->
+        <property name="fileEncodings" value="UTF-8" />
+        <!-- 对资源文件内容缓存时间，单位秒 -->
+        <property name="cacheSeconds" value="120" />
+    </bean>
+    <!--视图解析器-->
+        <!--解析jsp，默认使用jstl标签-->
+        <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+            <property name="prefix" value="/WEB-INF/jsp/"/>
+            <property name="suffix" value=".jsp"/>
+        </bean>
+    <!--全局异常处理器-->
+    <bean class="com.ssm.exception.CustomExceptionResolver"/>
+    <!--上传文件-->
+    <bean id="multipartResolver"
+        class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!--设置文件尺寸大小-->
+        <property name="maxUploadSize">
+            <value>4096000</value>
+        </property>
+    </bean>
+    <!--配置拦截器-->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!--/**表示拦截所有url，包括子目录-->
+            <mvc:mapping path="/**"/>
+            <bean class="com.ssm.interceptor.HandlerInteceptor1"/>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <!--/**表示拦截所有url，包括子目录-->
+            <mvc:mapping path="/**"/>
+            <bean class="com.ssm.interceptor.HandlerInteceptor2"/>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <!--/**表示拦截所有url，包括子目录-->
+            <mvc:mapping path="/**"/>
+            <bean class="com.ssm.interceptor.LoginInteceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+</beans>
